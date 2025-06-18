@@ -7,7 +7,6 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -60,12 +59,12 @@ class MusicService : MediaBrowserServiceCompat() {
 
     override fun onCreate() {
         super.onCreate()
-        serviceScope.launch {
+        serviceScope.launch(Dispatchers.IO) {
             firebaseMusicSource.fetchMediaData()
         }
 
         val activityIntent = packageManager?.getLaunchIntentForPackage(packageName)?.let {
-            PendingIntent.getActivity(this, 0, it, 0)
+            PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
         mediaSession = MediaSessionCompat(this, SERVICE_TAG).apply {
@@ -127,7 +126,6 @@ class MusicService : MediaBrowserServiceCompat() {
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
-
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.release()
     }
@@ -142,49 +140,32 @@ class MusicService : MediaBrowserServiceCompat() {
 
     override fun onLoadChildren(
         parentId: String,
-        result: Result<MutableList<MediaBrowserCompat.MediaItem>>
+        result: Result<List<MediaBrowserCompat.MediaItem>>
     ) {
-        when(parentId) {
+        when (parentId) {
             MEDIA_ROOT_ID -> {
-                val resultsSent = firebaseMusicSource.whenReady { isInitialized ->
-                    if(isInitialized) {
-                        result.sendResult(firebaseMusicSource.asMediaItems())
-                        if(!isPlayerInitialized && firebaseMusicSource.songs.isNotEmpty()) {
-                            preparePlayer(firebaseMusicSource.songs, firebaseMusicSource.songs[0], false)
-                            isPlayerInitialized = true
+                result.detach()
+                firebaseMusicSource.whenReady { isInitialized ->
+                    serviceScope.launch(Dispatchers.Main) {
+                        try {
+                            if (isInitialized) {
+                                result.sendResult(firebaseMusicSource.asMediaItems())
+                                if (!isPlayerInitialized && firebaseMusicSource.songs.isNotEmpty()) {
+                                    preparePlayer(firebaseMusicSource.songs, firebaseMusicSource.songs[0], false)
+                                    isPlayerInitialized = true
+                                }
+                            } else {
+                                mediaSession.sendSessionEvent(NETWORK_ERROR, null)
+                                result.sendResult(null)
+                            }
+                        } catch (e: Exception) {
+                            mediaSession.sendSessionEvent(NETWORK_ERROR, null)
+                            result.sendResult(null)
                         }
-                    } else {
-                        mediaSession.sendSessionEvent(NETWORK_ERROR, null)
-                        result.sendResult(null)
                     }
                 }
-                if(!resultsSent) {
-                    result.detach()
-                }
             }
+            else -> result.detach()
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

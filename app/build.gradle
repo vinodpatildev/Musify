@@ -78,10 +78,12 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:5.0.1'
 
     // Firebase
-    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation platform('com.google.firebase:firebase-bom:33.1.0')
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
+    implementation 'com.google.firebase:firebase-database-ktx' // Add for FirebaseMusicSource
+    implementation 'com.google.android.gms:play-services-base:18.5.0' // Add for Google Play Services
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0'
 
     // ExoPlayer
     implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'

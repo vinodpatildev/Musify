@@ -3,7 +3,6 @@ package com.vinodpatildev.musify.ui.viewmodels
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
 import android.util.Log
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,8 +13,11 @@ import com.vinodpatildev.musify.exoplayer.isPlaying
 import com.vinodpatildev.musify.exoplayer.isPrepared
 import com.vinodpatildev.musify.other.Constants.MEDIA_ROOT_ID
 import com.vinodpatildev.musify.other.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class MainViewModel @ViewModelInject constructor(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
     private val _mediaItems = MutableLiveData<Resource<List<Song>>>()
