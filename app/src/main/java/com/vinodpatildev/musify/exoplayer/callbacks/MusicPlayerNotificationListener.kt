@@ -1,5 +1,7 @@
 package com.vinodpatildev.musify.exoplayer.callbacks
 
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.app.Notification
 import android.content.Intent
 import androidx.core.content.ContextCompat
@@ -27,12 +29,21 @@ class MusicPlayerNotificationListener(
     ) {
         super.onNotificationPosted(notificationId, notification, ongoing)
         musicService.apply {
-            if(ongoing && !isForegroundService) {
+            if (ongoing && !isForegroundService) {
                 ContextCompat.startForegroundService(
                     this,
                     Intent(applicationContext, this::class.java)
                 )
-                startForeground(NOTIFICATION_ID, notification)
+                // Update this line to include foregroundServiceType
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                    )
+                } else {
+                    startForeground(NOTIFICATION_ID, notification)
+                }
                 isForegroundService = true
             }
         }
