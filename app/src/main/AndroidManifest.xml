@@ -17,7 +17,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Musify"
         tools:targetApi="31">
-        <service android:name=".exoplayer.MusicService">
+        <service android:name=".exoplayer.MusicService"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService"/>
             </intent-filter>
