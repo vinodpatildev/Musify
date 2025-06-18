@@ -4,7 +4,9 @@ package com.vinodpatildev.musify.ui.fragments
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -12,20 +14,22 @@ import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.RequestManager
 import com.vinodpatildev.musify.R
 import com.vinodpatildev.musify.data.entities.Song
+import com.vinodpatildev.musify.databinding.FragmentHomeBinding
+import com.vinodpatildev.musify.databinding.FragmentSongBinding
 import com.vinodpatildev.musify.exoplayer.isPlaying
 import com.vinodpatildev.musify.exoplayer.toSong
 import com.vinodpatildev.musify.other.Status
 import com.vinodpatildev.musify.ui.viewmodels.MainViewModel
 import com.vinodpatildev.musify.ui.viewmodels.SongViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_song.*
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class SongFragment : Fragment(R.layout.fragment_song) {
+class SongFragment : Fragment() {
+
+    private var _binding: FragmentSongBinding? = null
+    private val binding: FragmentSongBinding
+        get() = checkNotNull(_binding) { "binding is not initiated." }
 
     @Inject
     lateinit var glide: RequestManager
@@ -39,18 +43,27 @@ class SongFragment : Fragment(R.layout.fragment_song) {
 
     private var shouldUpdateSeekbar = true
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSongBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mainViewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
         subscribeToObservers()
 
-        ivPlayPauseDetail.setOnClickListener {
+        binding.ivPlayPauseDetail.setOnClickListener {
             curPlayingSong?.let {
                 mainViewModel.playOrToggleSong(it, true)
             }
         }
 
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if(fromUser) {
                     setCurPlayerTimeToTextView(progress.toLong())
@@ -69,19 +82,19 @@ class SongFragment : Fragment(R.layout.fragment_song) {
             }
         })
 
-        ivSkipPrevious.setOnClickListener {
+        binding.ivSkipPrevious.setOnClickListener {
             mainViewModel.skipToPreviousSong()
         }
 
-        ivSkip.setOnClickListener {
+        binding.ivSkip.setOnClickListener {
             mainViewModel.skipToNextSong()
         }
     }
 
     private fun updateTitleAndSongImage(song: Song) {
         val title = "${song.title} - ${song.subtitle}"
-        tvSongName.text = title
-        glide.load(song.imageUrl).into(ivSongImage)
+        binding.tvSongName.text = title
+        glide.load(song.imageUrl).into(binding.ivSongImage)
     }
 
     private fun subscribeToObservers() {
@@ -107,19 +120,19 @@ class SongFragment : Fragment(R.layout.fragment_song) {
         }
         mainViewModel.playbackState.observe(viewLifecycleOwner) {
             playbackState = it
-            ivPlayPauseDetail.setImageResource(
+            binding.ivPlayPauseDetail.setImageResource(
                 if(playbackState?.isPlaying == true) R.drawable.ic_pause else R.drawable.ic_play
             )
-            seekBar.progress = it?.position?.toInt() ?: 0
+            binding.seekBar.progress = it?.position?.toInt() ?: 0
         }
         songViewModel.curPlayerPosition.observe(viewLifecycleOwner) {
             if(shouldUpdateSeekbar) {
-                seekBar.progress = it.toInt()
+                binding.seekBar.progress = it.toInt()
                 setCurPlayerTimeToTextView(it)
             }
         }
         songViewModel.curSongDuration.observe(viewLifecycleOwner) {
-            seekBar.max = it.toInt()
+            binding.seekBar.max = it.toInt()
 
             var time = it;
             val minutes = time / (1000 * 60)
@@ -132,7 +145,7 @@ class SongFragment : Fragment(R.layout.fragment_song) {
             if(min.length < 2) min = "0" + min
             if(sec.length < 2) sec = "0" + sec
 
-            tvSongDuration.text = "${min}:${sec}"
+            binding.tvSongDuration.text = "${min}:${sec}"
         }
     }
 
@@ -148,7 +161,12 @@ class SongFragment : Fragment(R.layout.fragment_song) {
         if(min.length < 2) min = "0" + min
         if(sec.length < 2) sec = "0" + sec
 
-        tvCurTime.text = "${min}:${sec}"
+        binding.tvCurTime.text = "${min}:${sec}"
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
 

@@ -2,8 +2,8 @@ package com.vinodpatildev.musify.adapters
 
 import androidx.recyclerview.widget.AsyncListDiffer
 import com.bumptech.glide.RequestManager
+import com.vinodpatildev.musify.databinding.ListItemBinding
 import com.vinodpatildev.musify.R
-import kotlinx.android.synthetic.main.list_item.view.*
 import javax.inject.Inject
 
 class SongAdapter @Inject constructor(
@@ -14,36 +14,16 @@ class SongAdapter @Inject constructor(
 
     override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
         val song = songs[position]
-        holder.itemView.apply {
+        (holder.binding as ListItemBinding).apply {
             tvPrimary.text = song.title
             tvSecondary.text = song.subtitle
             glide.load(song.imageUrl).into(ivItemImage)
 
-            setOnClickListener {
+            root.setOnClickListener {
                 onItemClickListener?.let { click ->
                     click(song)
                 }
             }
         }
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
